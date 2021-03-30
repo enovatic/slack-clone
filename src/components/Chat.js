@@ -15,7 +15,7 @@ function Chat({ user }) {
     const [ channel, setChannel ] = useState();
     const [ messages, setMessages ] = useState([]);
 
-    const getMessages = ({channelId}) => {
+    const getMessages = () => {
         db.collection('rooms')
             .doc(channelId)
             .collection('messages')
@@ -43,7 +43,7 @@ function Chat({ user }) {
         }
     }
 
-    const getChannel = ({channelId}) => {
+    const getChannel = () => {
         db.collection('rooms')
             .doc(channelId)
             .onSnapshot((snapshot) => {
@@ -54,6 +54,7 @@ function Chat({ user }) {
     useEffect(() => {
         getChannel();
         getMessages();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [channelId])
 
     return (
