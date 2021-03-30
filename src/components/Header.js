@@ -4,13 +4,20 @@ import styled from 'styled-components';
 import AccessTimeIcon from '@material-ui/icons/AccessTime';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
-import { lightTheme, darkTheme } from "./themes/Themes";
+import DeveloperBoardIcon from '@material-ui/icons/DeveloperBoard';
 
 
-function Header() {
+function Header({ user, theme, setTheme, signOut }) {
+    const themeToggler = () => {
+        theme === 'light' ? setTheme('dark') : setTheme('light')
+    }
+
     return (
         <Container>
             <Main>
+                <ThemeSwitcher>
+                    <button onClick={themeToggler} className="themeSwitcher"><DeveloperBoardIcon />{theme}</button>
+                </ThemeSwitcher>
                 <AccessTimeIcon />
                 <SearchContainer>
                     <Search>
@@ -21,10 +28,10 @@ function Header() {
             </Main>
             <UserContainer>
                 <Name>
-                    Beckx Fabian
+                    { user.name }
                 </Name>
-                <UserImage>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png" alt=""/>
+                <UserImage onClick={signOut}>
+                    <img src={ user.photo ? user.photo : "http://www.pngall.com/wp-content/uploads/5/Profile-Avatar-PNG-Free-Download.png"} alt=""/>
                 </UserImage>
             </UserContainer>
         </Container>
@@ -95,8 +102,30 @@ const UserImage = styled.div`
     border: 2px solid white;
     border-radius: 50%;
     padding: 2px;
+    cursor: pointer;
 
     img {
         width:100%;
+        border-radius: 50%;
     }
+`
+
+const ThemeSwitcher = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 20px;
+
+  .themeSwitcher {
+    border: none;
+    background: #da920f;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px 10px 0 0;
+  
+    :focus {
+      outline: none;
+    }
+  }
+
+
 `

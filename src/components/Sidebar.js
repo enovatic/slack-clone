@@ -3,11 +3,28 @@ import styled from 'styled-components'
 import PostAddRoundedIcon from '@material-ui/icons/PostAddRounded';
 import AddRoundedIcon from '@material-ui/icons/AddRounded';
 import { sidebarItemsData } from '../data/SidebarData';
-import { ChannelItemsData } from '../data/ChannelData';
-import { lightTheme, darkTheme } from "./themes/Themes";
+import db from '../firebase';
+import { useHistory } from 'react-router-dom';
 
 
-function Sidebar() {
+function Sidebar( props ) {
+
+    const history = useHistory();
+
+    const goToChannel = (id) => {
+        if (id) {
+            history.push(`/room/${id}`)
+        }
+    }
+
+    const addChannel = () => {
+        const promptName = prompt("Enter channel name");
+        if(promptName) {
+            db.collection('rooms').add({
+                name: promptName
+            })
+        }
+    }
     return (
         <Container>
             <WorkspaceContainer>
@@ -25,7 +42,7 @@ function Sidebar() {
                         <MainChannelItem>
                             {item.icon}
                             {item.text}
-                        </MainChannelItem>
+                        </MainChannelItem> 
                     ))
                 }
                 
@@ -37,14 +54,14 @@ function Sidebar() {
                     <div>
                         Channels
                     </div>
-                    <AddRoundedIcon />
+                    <AddRoundedIcon onClick={addChannel} />
                     
                 </NewChannelContainer>
                 <ChannelsList>
                 {
-                    ChannelItemsData.map(item => (
-                        <Channel>
-                            {item.text}
+                    props.rooms.map(item => (
+                        <Channel onClick={ () => goToChannel(item.id) } >
+                            # {item.name}
                         </Channel>
                     ))
                 }
@@ -102,7 +119,7 @@ const MainChannels = styled.div`
         cursor: pointer;
         padding-left: 19px;
         :hover {
-            background: #350D36;
+            background: #300832;
         }
     `
 

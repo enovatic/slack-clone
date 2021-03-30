@@ -1,43 +1,93 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import StarBorderRoundedIcon from '@material-ui/icons/StarBorderRounded';
-import SendIcon from '@material-ui/icons/Send';
-import { BodyChatItemsData } from '../data/BodyChatData';
-import { lightTheme, darkTheme } from "./themes/Themes";
+import ChatInput from './reusable/ChatInput';
+import ChatMessage from './reusable/ChatMessage';
+import db from '../firebase';
+import { useParams } from 'react-router-dom';
+import firebase from 'firebase';
 
 
-function Chat() {
+function Chat({ user }) {
+
+    let { channelId } = useParams();
+    const [ channel, setChannel ] = useState();
+    const [ messages, setMessages ] = useState([]);
+
+    const getMessages = () => {
+        db.collection('rooms')
+            .doc(channelId)
+            .collection('messages')
+            .orderBy('timestamp', 'asc')
+            .onSnapshot((snapshot) => {
+                let messages = snapshot.docs.map((doc) => doc.data());
+                setMessages(messages);
+        })
+    }
+
+    const sendMessage = (text) => {
+        if(channelId) {
+            let payload = {
+                text,
+                timestamp: firebase.firestore.Timestamp.now(),
+                user : user.name,
+                userImage: user.photo,
+            }
+            db.collection("rooms")
+                .doc(channelId)
+                .collection('messages')
+                .add(payload)
+
+            console.log(payload);
+        }
+    }
+
+    const getChannel = () => {
+        db.collection('rooms')
+            .doc(channelId)
+            .onSnapshot((snapshot) => {
+                setChannel(snapshot.data());
+        })
+    }
+
+    useEffect(() => {
+        getChannel();
+        getMessages();
+    }, [channelId])
+
     return (
         <Container>
-            <ChatHeader>
-                <ChatHeaderLeft>
-                    <h4># Enovatic <StarBorderRoundedIcon style={{ fontSize: "14px", padding: "5px"}} /></h4>
-                    <p>Your tagline here ...</p>
-                </ChatHeaderLeft>
-                <ChatHeaderRight>
-                    <p>Détails</p>
-                    <InfoOutlinedIcon />
-                </ChatHeaderRight>
-            </ChatHeader>
-            <ChatBody>
+            <Header>
+                <Channel>
+                    <ChannelName>
+                        # { channel && channel.name } <StarBorderRoundedIcon style={{ fontSize: "14px", padding: "5px"}} />
+                    </ChannelName>
+                    <ChannelInfo>
+                        Your tagline here ...
+                    </ChannelInfo>
+                </Channel>
+                <ChannelDetails>
+                    <div>Détails</div>
+                    <Info />
+                </ChannelDetails>
+            </Header>
+
+            <MessageContainer>
                 {
-                    BodyChatItemsData.map(item => (
-                        <BodyChatItem>              
-                            <img src={item.image} alt=""/>
-                            <div>
-                                <h4>{item.username}</h4>
-                                <span>{item.date}</span>
-                                <p>{item.description}</p>
-                            </div>
-                        </BodyChatItem>
+                    messages.length > 0 &&
+                    messages.map((data, index) => (
+                        <ChatMessage 
+                            text={data.text}
+                            name={data.user}
+                            image={data.userImage}
+                            timestamp={data.timestamp} 
+                        />
                     ))
                 }
-            </ChatBody>
-            <ChatFooter>
-                <input type="text"/>
-                <button><SendIcon /></button>
-            </ChatFooter>
+            </MessageContainer>
+
+            <ChatInput sendMessage={sendMessage} />
         </Container>
     )
 }
@@ -46,117 +96,58 @@ export default Chat
 
 const Container = styled.div`
     display:grid;
-    grid-template-rows: 65px auto 100px;
+    grid-template-rows: 65px auto min-content;
+    min-height:0;
 `
 
-    const ChatHeader = styled.div`
+    const Header = styled.div`
         padding: 10px 20px;
         border-bottom: 1px solid ${({ theme }) => theme.toggleBorder};
         display:flex;
         justify-content: space-between;
+        align-items:center;
     `
 
-        const ChatHeaderLeft = styled.div`
-
-
-            h4 {
-                font-size:15px;
-                line-height: 22px;
-                display:flex;
-            }
-
+        const Channel = styled.div`
             p {
                 font-size:13px;
                 color: ${({ theme }) => theme.text};
             }
         `
-
-        const ChatHeaderRight = styled.div`
-            display:flex;
-            justify-content: center;
-            align-items: center;
-
-            p {
-                margin-right: 10px;
-            }
-        `
-
-    const ChatBody = styled.div`
         
-
-    `
-        const BodyChatItem = styled.div`
-            padding: 10px 20px;
-            display: grid;
-            grid-template-columns: 55px auto;
-
-            img {
-                border-radius: 5px;
-                width: 36px;
-                height: 36px;
-            }
-
-            h4 {
+            const ChannelName = styled.div`
+                font-weight:900;
                 font-size:15px;
-                line-height: 15px;
-                display:inline-block;
-                margin-right: 10px;
-                font-weight: 900;
-            }
-            span {
+                line-height: 22px;
+                display:flex;
+            `
+
+            const ChannelInfo = styled.div`
+                font-weight:400;
                 font-size:13px;
-                color: #616061;
-            }
+                color: #606060;
 
-            p {
-                font-size:14px;
-                color: #333333;
-            }
+            `
 
-            :hover {
-                background-color: #eeeeee;
-            }
+        const ChannelDetails = styled.div`
+            display:flex;
+            align-items: center;
+            color: #606060;
         `
 
-    const ChatFooter = styled.div`
-        display: flex;
-        position:relative;
-        
-        button {
-            position: absolute;
-            right:33px;
-            top: 48%;
-            transform: translate(0 , -40%);
-            background: #007a5a;
-            color: #fff;
-            border: none;
-            width: 34px;
-            height:34px;
-            padding:5px 0;
-            display:block;
-            cursor: pointer;
-            border-radius: 4px;
+            const Info = styled(InfoOutlinedIcon)`
+                margin-left: 10px;
+            `
 
-            :focus {
-                outline: none;
-            }
-        }
-
-        input {
-            width:100%;
-            margin: 20px;
-            background: transparent;
-            border: none;
-            padding: 12px 25px;
-            color: #888888;
-            border: 1px solid ${({ theme }) => theme.toggleBorder};
-            border-radius: 4px; 
-
-            :focus {
-                outline: none;
-            }
-        }
+    const MessageContainer = styled.div`
+        display:flex;
+        flex-direction: column;
+        overflow-y: scroll;
 
     `
+
+        
+
+    
 
     
