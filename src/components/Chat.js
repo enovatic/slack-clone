@@ -54,6 +54,7 @@ function Chat({ user }) {
     useEffect(() => {
         getChannel();
         getMessages();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [channelId])
 
     return (
